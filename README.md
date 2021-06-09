@@ -2,6 +2,27 @@
 Self-Driving Car Engineer Nanodegree Program
 
 ---
+## Reflection
+
+### Core concepts:
+PID control consists of three components, Proportional(P), Integral(I), and Derivative(D). 
+
+* P is proportional error. Larger P coefficient increases proportional gain, but can lead to strong oscillation, especially if used alone
+
+* I is the accumulation error. Accumulating error could be useful for steady state error, essentially using information of the past.
+
+* D is derivative error, aka, rate of change error. Derivatiev error takes future state into consideration, and therefore can reduce overshooting, essentially projecting information of the future
+
+### Coefficient parameter tuning
+This is pretty much the core of this project. There are various ways of doing it, either systematically or via trial and error. In this submission, I did it via trial and error, aka, manually. 
+
+Initially, I used just P control, and clearly the car oscallated heavily to the point that it was not possible to be safe, proving the point that P control alone is not enough. Then D control came into play, followed by I(Integral) control. However, through trial and error, what I found was PD control worked and I(Integral) control did not add much. Probably a more systematical approach like twiddle could find better combinations.
+
+I also added a speed controller to control the car speed. The method of parameter tuning was basically the same. With both controlled, the car could drive more safely than with just steer_angle controller
+
+I recorded a short video of the car driving in the simulator and converted it to a gif to make it small
+
+![Video demo](./CarND_PID_control.gif)
 
 ## Dependencies
 
