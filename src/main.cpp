@@ -34,11 +34,14 @@ int main() {
   uWS::Hub h;
 
   PID pid;
+  PID speed_pid;
   /**
-   * TODO: Initialize the pid variable.
+   * Initialize the pid variable for both controllers.
    */
+  pid.Init(0.12, 0.000, 1.0);
+  speed_pid.Init(0.1, 0.000, 1.2);
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
+  h.onMessage([&pid, &speed_pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -51,26 +54,56 @@ int main() {
 
         string event = j[0].get<string>();
 
+        double orientation = 0;
         if (event == "telemetry") {
           // j[1] is the data JSON object
           double cte = std::stod(j[1]["cte"].get<string>());
           double speed = std::stod(j[1]["speed"].get<string>());
           double angle = std::stod(j[1]["steering_angle"].get<string>());
           double steer_value;
+          double throttle_value;
           /**
-           * TODO: Calculate steering value here, remember the steering value is
+           *  Calculate steering value here, remember the steering value is
            *   [-1, 1].
            * NOTE: Feel free to play around with the throttle and speed.
            *   Maybe use another PID controller to control the speed!
+           *  add speed controller
            */
-          
+          pid.UpdateError(cte);
+          steer_value = pid.TotalError();
+          if (steer_value > 1) {
+            steer_value = 1.0;
+          }
+          if (steer_value < -1.0) {
+            steer_value = -1.0;
+          }
+          double ref_speed = 30;
+          double err_speed = speed - ref_speed;
+          speed_pid.UpdateError(err_speed);
+          throttle_value = speed_pid.TotalError();
+          if (throttle_value > 0.5) {
+            throttle_value = 0.5;
+          }
+          if (throttle_value < -0.5) {
+            throttle_value = -0.5;
+          }
+        
+         /* for (int i=0; i<100; i++) {
+          *  double turn = atan(angle);
+          *  double radius = speed / turn;
+          *  double s = speed * asin(orientation);
+          *  orientation = (orientation + turn);
+          */  
+
+
+
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value 
                     << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = throttle_value;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
